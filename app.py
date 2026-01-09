@@ -59,7 +59,7 @@ def embed_msg_logic(img_file, msg, password_str):
         channel = pix % 3
         flat[pix][channel] = (flat[pix][channel] & ~1) | bit
 
-    out_img = Image.fromarray(flat.reshape(h, w, 3).astype(np.uint8))
+    out_img = Image.fromarray(np.clip(flat.reshape(h, w, 3), 0, 255).astype(np.uint8))
     img_io = io.BytesIO()
     out_img.save(img_io, 'PNG')
     img_io.seek(0)
