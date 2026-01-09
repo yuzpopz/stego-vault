@@ -95,7 +95,7 @@ h2 {
     text-transform: uppercase;
 }
 
-p {
+.section p {
     font-size: 0.9rem;
     line-height: 1.5;
     color: var(--text-dim);
@@ -165,8 +165,19 @@ input:focus, textarea:focus {
 }
 
 @media (max-width: 768px) {
-    .requirements {
-        grid-template-columns: 1fr;
+    h1 { line-height: 1.4; }
+    .requirements { grid-template-columns: 1fr; }
+    .section p { line-height: 1.65; }
+}
+
+.mobile-only {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .mobile-only {
+        display: block;
+        content: "";
     }
 }
 

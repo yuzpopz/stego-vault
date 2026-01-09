@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steganography Vault</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/iconn.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/icon180.png">
 </head>
 <body>
 
@@ -48,7 +50,7 @@
         <form action="/embed" method="post" enctype="multipart/form-data">
             <label>1. Cover Image (.PNG ONLY)</label>
             <div class="file-drop" data-input="embed-image">
-                <span class="file-text">DRAG & DROP HERE / CLICK TO SELECT</span>
+                <span class="file-text">DRAG & DROP HERE / <br class="mobile-only">CLICK TO SELECT</span>
             </div>
             <input type="file" id="embed-image" name="image" accept="image/png" required hidden>            
             
