@@ -184,7 +184,7 @@ extractForm.addEventListener('submit', async function(e) {
             if (!resultBox) {
                 const section = extractForm.parentElement;
                 const isDesktop = window.innerWidth > 768;
-                const desktopMargin = isDesktop ? '5px' : '0px';
+                const lmargin = isDesktop ? '5px' : '0px';
 
                 resultBox = document.createElement('div');
                 resultBox.className = 'result-box';
@@ -193,7 +193,7 @@ extractForm.addEventListener('submit', async function(e) {
                     <div id="short-result" style="margin-bottom: 12px; word-break: normal;"></div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button id="download-btn" class="download-btn">Download Full Text</button>
-                        <button id="copy-btn" class="download-btn" style="margin-left: ${desktopMargin}">Copy to Clipboard</button>
+                        <button id="copy-btn" class="download-btn" style="margin-left: ${lmargin}">Copy to Clipboard</button>
                     </div>
                 `;
                 section.appendChild(resultBox);

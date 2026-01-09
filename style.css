@@ -132,6 +132,19 @@ input[type="text"] {
     letter-spacing: 0.5px;
 }
 
+@media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+
+    input[type="password"] {
+        letter-spacing: 2px;
+    }
+}
+
 textarea {
     min-height: 160px;
     resize: vertical;
@@ -183,10 +196,6 @@ textarea:focus {
 
     .section p {
         line-height: 1.65;
-    }
-
-    input[type="password"] {
-        letter-spacing: 1px;
     }
 }
 
@@ -379,7 +388,7 @@ button:disabled {
     font-family: inherit;
     font-weight: bold;
     letter-spacing: 1px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     transition: all 0.25s ease-out;
     width: auto;
     margin-top: 10px;
