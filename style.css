@@ -132,6 +132,12 @@ input[type="text"] {
     letter-spacing: 0.5px;
 }
 
+input[type="password"],
+input[type="text"]#embed-pwd,
+input[type="text"]#extract-pwd {
+    padding-right: 70px !important;
+}
+
 @media screen and (max-width: 768px) {
     input[type="text"],
     input[type="password"],
@@ -140,8 +146,8 @@ input[type="text"] {
         font-size: 16px !important;
     }
 
-    input[type="password"] {
-        letter-spacing: 2px;
+    input[type="password"]:not([type="text"]) {
+        letter-spacing: 3px;
     }
 }
 
@@ -172,6 +178,8 @@ textarea:focus {
     cursor: pointer;
     font-size: 0.8rem;
     color: var(--text-dim);
+    display: flex;
+    align-items: center;
 }
 
 .requirements {
@@ -196,6 +204,10 @@ textarea:focus {
 
     .section p {
         line-height: 1.65;
+    }
+
+    .toggle-btn {
+        font-size: 0.9rem;
     }
 }
 
