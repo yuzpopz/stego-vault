@@ -88,6 +88,12 @@ document.querySelectorAll('.file-drop').forEach(drop => {
             showError("ONLY PNG FILES ALLOWED!");
             return false;
         }
+
+        if (input.id === "extract-image") {
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+            localStorage.setItem('stego_filename', nameWithoutExt);
+        }
+
         text.textContent = file.name.toUpperCase();
         drop.classList.add('selected');
         input.dispatchEvent(new Event('input'));
@@ -114,7 +120,7 @@ const loaderMsg = document.getElementById('loader-msg');
 const errorContainer = document.getElementById('error-container');
 
 function showLoading(message) {
-    loaderMsg.textContent = message;
+    loaderMsg.innerHTML = message;
     overlay.style.display = 'flex';
 }
 
@@ -122,10 +128,14 @@ function hideLoading() { overlay.style.display = 'none'; }
 function showUIError(msg) { errorContainer.innerHTML = `<div class="alert">${msg}</div>`; }
 function clearUIError() { errorContainer.innerHTML = ''; }
 
-embedForm.addEventListener('submit', async function(e) {
+embedForm.addEventListener('submit', async function (e) {
     e.preventDefault();
     clearUIError();
-    showLoading("ENCRYPTING & EMBEDDING. PLEASE WAIT ...");
+
+    const fileInput = document.getElementById('embed-image');
+    const originalName = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
+
+    showLoading("ENCRYPTING & EMBEDDING. <br class='mobile-only'>PLEASE WAIT ...");
     const formData = new FormData(this);
     try {
         const response = await fetch('/embed', { method: 'POST', body: formData });
@@ -134,7 +144,7 @@ embedForm.addEventListener('submit', async function(e) {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'stego_image.png';
+            a.download = `${originalName}_embedded.png`;
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -151,37 +161,104 @@ embedForm.addEventListener('submit', async function(e) {
     }
 });
 
-extractForm.addEventListener('submit', () => {
+/* ---------- UPDATED EXTRACT FORM LOGIC ---------- */
+extractForm.addEventListener('submit', async function(e) {
+    e.preventDefault(); // This stops the browser tab from showing 'loading'
     clearUIError();
-    showLoading("DECRYPTING & EXTRACTING. PLEASE WAIT ...");
-});
+    showLoading("DECRYPTING & EXTRACTING. <br class='mobile-only'>PLEASE WAIT ...");
 
-/* ---------- POST-EXTRACTION RESULT ---------- */
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.decryptedText) {
-        const fullText = window.decryptedText;
-        const maxLength = 1000;
-        const shortResultEl = document.getElementById('short-result');
-        const downloadBtn = document.getElementById('download-btn');
+    const formData = new FormData(this);
+    
+    // Capture filename for the download button later
+    const fileInput = document.getElementById('extract-image');
+    const originalName = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
 
-        if (fullText.length <= maxLength) {
-            shortResultEl.textContent = fullText;
+    try {
+        const response = await fetch('/extract', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (response.ok) {
+            hideLoading();
+            
+            let resultBox = document.querySelector('.result-box');
+            if (!resultBox) {
+                const section = extractForm.parentElement;
+                const isDesktop = window.innerWidth > 768;
+                const desktopMargin = isDesktop ? '5px' : '0px';
+
+                resultBox = document.createElement('div');
+                resultBox.className = 'result-box';
+                resultBox.innerHTML = `
+                    <label style="color: var(--accent); margin-top: -5px">Result:</label>
+                    <div id="short-result" style="margin-bottom: 12px; word-break: normal;"></div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="download-btn" class="download-btn">Download Full Text</button>
+                        <button id="copy-btn" class="download-btn" style="margin-left: ${desktopMargin}">Copy to Clipboard</button>
+                    </div>
+                `;
+                section.appendChild(resultBox);
+            }
+
+            const fullText = data.decrypted_text;
+            const shortResultEl = document.getElementById('short-result');
+            const maxLength = 980;
+
+            if (fullText.length <= maxLength) {
+                shortResultEl.textContent = fullText;
+            } else {
+                shortResultEl.textContent = fullText.slice(0, maxLength) + ` ... [${fullText.length - maxLength} CHARACTERS REMAINING]`;
+            }
+
+            const downloadBtn = document.getElementById('download-btn');
+            // Remove old listeners by cloning or just overwriting the function
+            const newDownloadBtn = downloadBtn.cloneNode(true);
+            downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
+
+            newDownloadBtn.addEventListener('click', () => {
+                const blob = new Blob([fullText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${originalName}_extracted.txt`; // Dynamic filename
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            });
+
+            const copyBtn = document.getElementById('copy-btn');
+            const newCopyBtn = copyBtn.cloneNode(true);
+            copyBtn.parentNode.replaceChild(newCopyBtn, copyBtn);
+
+            newCopyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(fullText);
+                    const originalText = newCopyBtn.textContent;
+                    newCopyBtn.textContent = "COPIED!";
+                    
+                    setTimeout(() => {
+                        newCopyBtn.textContent = originalText;
+                        newCopyBtn.style.borderColor = "var(--accent)";
+                    }, 2000);
+                } catch (err) {
+                    showUIError("FAILED TO COPY TEXT.");
+                }
+            });
+
+            setTimeout(() => {
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+
         } else {
-            const remaining = fullText.length - maxLength;
-            shortResultEl.textContent = fullText.slice(0, maxLength) + ` ... [${remaining} CHARACTER(S) REMAINING]`;
+            hideLoading();
+            showUIError(data.error);
         }
-
-        downloadBtn.addEventListener('click', () => {
-            const blob = new Blob([fullText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'secret_message.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
+    } catch (error) {
+        hideLoading();
+        showUIError("CONNECTION ERROR: COULD NOT REACH SERVER.");
     }
 });
 
@@ -216,7 +293,7 @@ function init() {
 
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     particles.forEach(p => {
         p.x += p.speedX;
         p.y += p.speedY;
@@ -235,7 +312,7 @@ function animate() {
         let distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < mouse.radius) {
-            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - distance/mouse.radius})`;
+            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - distance / mouse.radius})`;
             ctx.lineWidth = 0.5;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);

@@ -1,115 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steganography Vault</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="images/iconn.png" type="image/png">
+    <link rel="icon" href="images/iconn.png" type="image/png" media="(prefers-color-scheme: dark)">
+    <link rel="icon" href="images/iconn_light.png" type="image/png" media="(prefers-color-scheme: light)">
     <link rel="apple-touch-icon" href="images/icon180.png">
+    <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
 
-<canvas id="canvas-bg"></canvas>
+    <canvas id="canvas-bg"></canvas>
 
-<div id="loading-overlay">
-    <div class="loader-text" id="loader-msg">INITIALIZING ...</div>
-    <div class="loader-bar"></div>
-</div>
-
-<div class="container">
-    <h1><a href="/" style="text-decoration: none; color: inherit;">Image Steganography Vault // ChaCha20</a></h1>
-
-    <div class="section">
-        <h2>[00] HOW IT WORKS</h2>
-        <p>
-        Messages are encrypted with ChaCha20 using a key derived via PBKDF2. 
-            Your password never leaves the server in plain text. For maximum security,
-            an additional HMAC-SHA256 signature is embedded to ensure the message hasn't been
-            tampered with and that the correct password is used.
-        </p>
-        <p style="margin-top: 18px">
-        <strong>NOTE:</strong> Every steganography process uses its own unique protocol. 
-            To successfully reveal your message, you must return to the
-            <strong style="color: #00ff41">Steganography Vault</strong> for the extraction process.
-        </p>
+    <div id="loading-overlay">
+        <div class="loader-text" id="loader-msg">INITIALIZING ...</div>
+        <div class="loader-bar"></div>
     </div>
 
-    <div id="error-container"></div> 
-    
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
+    <div class="container">
+        <h1><a href="/" style="text-decoration: none; color: inherit;">Image Steganography Vault // ChaCha20</a></h1>
+
+        <div class="section">
+            <h2>[00] HOW IT WORKS</h2>
+            <p>
+                Messages are encrypted with ChaCha20 using a key derived via PBKDF2.
+                Your password never leaves the server in plain text. For maximum security,
+                an additional HMAC-SHA256 signature is embedded to ensure the message hasn't been
+                tampered with and that the correct password is used.
+            </p>
+            <p style="margin-top: 18px">
+                <strong>NOTE:</strong> Every steganography process uses its own unique protocol.
+                To successfully reveal your message, you should return to the
+                <strong style="color: #00ff41">Steganography Vault</strong> for the extraction process.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>[01] HIDE A MESSAGE</h2>
+            <form action="/embed" method="post" enctype="multipart/form-data">
+                <label>1. Cover Image (.PNG ONLY)</label>
+                <div class="file-drop" data-input="embed-image">
+                    <span class="file-text">DRAG & DROP HERE / <br class="mobile-only">CLICK TO SELECT</span>
+                </div>
+                <input type="file" id="embed-image" name="image" accept="image/png" required hidden>
+
+                <label>2. Secret Message</label>
+                <textarea name="message" placeholder="Write your secret message here ..." required></textarea>
+
+                <label>3. Encryption Password</label>
+                <div class="password-container">
+                    <input type="password" id="embed-pwd" name="password" required>
+                    <span class="toggle-btn" onclick="toggleVisibility('embed-pwd', this)">[SHOW]</span>
+                </div>
+
+                <ul class="requirements" id="req-list">
+                    <li id="length" class="invalid">AT LEAST 8 CHARACTERS</li>
+                    <li id="upper" class="invalid">AT LEAST 1 UPPERCASE LETTER</li>
+                    <li id="lower" class="invalid">AT LEAST 1 LOWERCASE LETTER</li>
+                    <li id="num" class="invalid">AT LEAST 1 NUMBER</li>
+                    <li id="spec" class="invalid">AT LEAST 1 SPECIAL CHARACTER</li>
+                </ul>
+
+                <button type="submit" id="embed-btn" disabled>Embed Now!</button>
+            </form>
+        </div>
+
+        <div id="error-container"></div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
         {% for message in messages %}
-          <div class="alert">{{ message }}</div>
+        <div class="alert">{{ message }}</div>
         {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <div class="section">
-        <h2>[01] HIDE A MESSAGE</h2>
-        <form action="/embed" method="post" enctype="multipart/form-data">
-            <label>1. Cover Image (.PNG ONLY)</label>
-            <div class="file-drop" data-input="embed-image">
-                <span class="file-text">DRAG & DROP HERE / <br class="mobile-only">CLICK TO SELECT</span>
-            </div>
-            <input type="file" id="embed-image" name="image" accept="image/png" required hidden>            
-            
-            <label>2. Secret Message</label>
-            <textarea name="message" placeholder="Write your secret message here ..." required></textarea>
-            
-            <label>3. Encryption Password</label>
-            <div class="password-container">
-                <input type="password" id="embed-pwd" name="password" required>
-                <span class="toggle-btn" onclick="toggleVisibility('embed-pwd', this)">[SHOW]</span>
-            </div>
-
-            <ul class="requirements" id="req-list">
-                <li id="length" class="invalid">AT LEAST 8 CHARACTERS</li>
-                <li id="upper" class="invalid">AT LEAST 1 UPPERCASE LETTER</li>
-                <li id="lower" class="invalid">AT LEAST 1 LOWERCASE LETTER</li>
-                <li id="num" class="invalid">AT LEAST 1 NUMBER</li>
-                <li id="spec" class="invalid">AT LEAST 1 SPECIAL CHARACTER</li>
-            </ul>
-
-            <button type="submit" id="embed-btn" disabled>Embed Now!</button>
-        </form>
-    </div>
-
-    <div class="section">
-        <h2>[02] REVEAL A MESSAGE</h2>
-        <form action="/extract" method="post" enctype="multipart/form-data">
-            <label>1. Stego Image</label>
-            <div class="file-drop" data-input="extract-image">
-                <span class="file-text">DRAG & DROP HERE / CLICK TO SELECT</span>
-            </div>
-            <input type="file" id="extract-image" name="image" accept="image/png" required hidden>            
-            
-            <label>2. Decryption Password</label>
-            <div class="password-container">
-                <input type="password" id="extract-pwd" name="password" required>
-                <span class="toggle-btn" onclick="toggleVisibility('extract-pwd', this)">[SHOW]</span>
-            </div>
-            
-            <button type="submit" id="extract-btn" disabled>Extract Now!</button>
-        </form>
-
-        {% if decrypted_text %}
-            <div class="result-box">
-                <label style="color: var(--accent);">Result:</label>
-                <div id="short-result" style="margin-bottom: 12px;"></div>
-                <button id="download-btn" class="download-btn">Download Full Text</button>
-            </div>
-
-            <script>
-                // Passing Flask variable to JS
-                window.decryptedText = {{ decrypted_text|tojson }};
-            </script>
         {% endif %}
+        {% endwith %}
+
+        <div class="section">
+            <h2>[02] REVEAL A MESSAGE</h2>
+            <form action="/extract" method="post" enctype="multipart/form-data">
+                <label>1. Stego Image</label>
+                <div class="file-drop" data-input="extract-image">
+                    <span class="file-text">DRAG & DROP HERE / <br class="mobile-only">CLICK TO SELECT</span>
+                </div>
+                <input type="file" id="extract-image" name="image" accept="image/png" required hidden>
+
+                <label>2. Decryption Password</label>
+                <div class="password-container">
+                    <input type="password" id="extract-pwd" name="password" required>
+                    <span class="toggle-btn" onclick="toggleVisibility('extract-pwd', this)">[SHOW]</span>
+                </div>
+
+                <button type="submit" id="extract-btn" disabled>Extract Now!</button>
+            </form>
+
+        </div>
+
+        <div class="footer">Made with ❤︎ by Yu Qing Peng</div>
     </div>
 
-    <div class="footer">Made with ❤︎ by Yu Qing Peng</div>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>
