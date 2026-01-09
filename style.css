@@ -95,6 +95,15 @@ h2 {
     text-transform: uppercase;
 }
 
+p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.25px;
+    margin-bottom: 12px;
+}
+
 label {
     display: block;
     font-size: 0.92rem;
@@ -251,6 +260,7 @@ button:disabled {
     letter-spacing: 3px;
     margin-bottom: 20px;
     text-transform: uppercase;
+    text-align: center;
 }
 
 .loader-bar {
@@ -268,6 +278,7 @@ button:disabled {
     height: 100%;
     background: var(--accent);
     animation: loading-scan 1.6s infinite ease-in-out;
+    left: 0;
 }
 
 @keyframes loading-scan {

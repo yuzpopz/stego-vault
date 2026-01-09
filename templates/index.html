@@ -11,12 +11,27 @@
 <canvas id="canvas-bg"></canvas>
 
 <div id="loading-overlay">
-    <div class="loader-text" id="loader-msg">INITIALIZING...</div>
+    <div class="loader-text" id="loader-msg">INITIALIZING ...</div>
     <div class="loader-bar"></div>
 </div>
 
 <div class="container">
-    <h1>Image Steganography Vault // ChaCha20</h1>
+    <h1><a href="/" style="text-decoration: none; color: inherit;">Image Steganography Vault // ChaCha20</a></h1>
+
+    <div class="section">
+        <h2>[00] HOW IT WORKS</h2>
+        <p>
+        Messages are encrypted with ChaCha20 using a key derived via PBKDF2. 
+            Your password never leaves the server in plain text. For maximum security,
+            an additional HMAC-SHA256 signature is embedded to ensure the message hasn't been
+            tampered with and that the correct password is used.
+        </p>
+        <p style="margin-top: 18px">
+        <strong>NOTE:</strong> Every steganography process uses its own unique protocol. 
+            To successfully reveal your message, you must return to the
+            <strong style="color: #00ff41">Steganography Vault</strong> for the extraction process.
+        </p>
+    </div>
 
     <div id="error-container"></div> 
     
