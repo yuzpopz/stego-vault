@@ -1,7 +1,7 @@
 :root {
     --bg: #0a0a0a;
     --surface: #141414;
-    --accent: #ff0000;
+    --accent: #00ff41;
     --text-main: #e0e0e0;
     --text-dim: #888;
     --border: #222;
@@ -21,7 +21,12 @@ body {
 
 html {
     scroll-behavior: smooth;
-    overscroll-behavior: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    #canvas-bg {
+        display: none;
+    }
 }
 
 /* Webkit Browsers (Chrome, Safari, Edge) */
@@ -150,6 +155,12 @@ input:focus, textarea:focus {
     letter-spacing: 0.3px;
 }
 
+@media (max-width: 768px) {
+    .requirements {
+        grid-template-columns: 1fr;
+    }
+}
+
 .invalid { color: #444; }
 .valid { color: var(--accent); }
 .valid::before { content: "> "; }
@@ -262,6 +273,11 @@ button:disabled {
 @keyframes loading-scan {
     0% { left: -40%; }
     100% { left: 110%; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .loader-text { font-size: 1rem; }
+    .loader-bar { width: 80%; }
 }
 
 .download-btn {
