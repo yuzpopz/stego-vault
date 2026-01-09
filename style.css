@@ -1,0 +1,310 @@
+:root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --accent: #00ff41; /* Cyber Green */
+    --text-main: #e0e0e0;
+    --text-dim: #888;
+    --border: #222;
+    --error: #ff4444;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+html {
+    scroll-behavior: smooth;
+    overscroll-behavior: none;
+}
+
+/* Webkit Browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* The background of the scrollbar area */
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+/* The draggable handle */
+::-webkit-scrollbar-thumb {
+    background: #222; /* Matches your border color */
+    border-radius: 0px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 5px var(--accent); /* Neon glow effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg);
+}
+
+.container {
+    width: 100%;
+    max-width: 650px;
+}
+
+h1 {
+    font-size: 1.25rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-left: 3.5px solid var(--accent);
+    padding-left: 18px;
+    margin-bottom: 40px;
+}
+
+.section {
+    /*background: var(--surface)*/
+    border: 1px solid var(--border);
+    padding: 25px;
+    margin-bottom: 40px;
+    position: relative;
+    transition: border-color 0.25s ease-out;
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.section:focus-within {
+    border-color: var(--accent);
+}
+
+h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0.8px;
+    color: var(--accent);
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+label {
+    display: block;
+    font-size: 0.92rem;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+input[type="file"], textarea, input[type="password"], input[type="text"] {
+    width: 100%;
+    background: #000;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 12px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.25s ease-out;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+}
+
+textarea {
+    min-height: 160px;
+    resize: vertical;
+    line-height: 1.35;
+    scrollbar-width: none;
+}
+
+textarea::-webkit-scrollbar {
+    display: none;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--accent);
+}
+
+.password-container { position: relative; }
+
+.toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.requirements {
+    list-style: none;
+    padding: 0;
+    margin: -10px 0 20px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+}
+
+.invalid { color: #444; }
+.valid { color: var(--accent); }
+.valid::before { content: "> "; }
+.invalid::before { content: "- "; }
+
+button {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    font-family: inherit;
+    transition: all 0.25s ease-out;
+}
+
+button:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--text-dim);
+    background: transparent;
+}
+
+.alert {
+    border: 1px solid var(--error);
+    color: var(--error);
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px dashed var(--accent);
+    background: rgba(0, 255, 65, 0.05);
+    font-size: 0.85rem;
+}
+
+.file-drop {
+    border: 1.5px dashed var(--border);
+    background: #000;
+    padding: 22px;
+    margin-bottom: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease-out;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.file-drop:hover { border-color: var(--accent); color: var(--accent); }
+.file-drop.dragover { border-color: var(--accent); background: rgba(0, 255, 65, 0.05); color: var(--accent); }
+.file-drop.selected { border-color: var(--accent); color: var(--accent); }
+.file-drop.invalid { border-color: var(--error); color: var(--error); }
+
+#loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 10, 0.9);
+    z-index: 9999;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.loader-text {
+    color: var(--accent);
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.loader-bar {
+    width: 400px;
+    height: 2px;
+    background: #222;
+    position: relative;
+    overflow: hidden;
+}
+
+.loader-bar::after {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 100%;
+    background: var(--accent);
+    animation: loading-scan 1.6s infinite ease-in-out;
+}
+
+@keyframes loading-scan {
+    0% { left: -40%; }
+    100% { left: 110%; }
+}
+
+.download-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 10px 15px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    transition: all 0.25s ease-out;
+    width: auto;
+    margin-top: 10px;
+}
+
+.download-btn:hover { background: var(--accent); color: #000; }
+::placeholder { color: #333; }
+
+.footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: -15px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.25s ease;
+}
+
+.footer:hover {
+    color: var(--accent);
+}
+
+#canvas-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Keep it behind all content */
+    background: var(--bg);
+    pointer-events: none; /* Allows mouse clicks to pass through to the form */
+}

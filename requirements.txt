@@ -1,0 +1,5 @@
+Flask
+pycryptodome
+numpy
+Pillow
+gunicorn

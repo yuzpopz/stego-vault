@@ -1,0 +1,252 @@
+/* ---------- UTILS ---------- */
+function toggleVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "[HIDE]";
+    } else {
+        input.type = "password";
+        btn.textContent = "[SHOW]";
+    }
+}
+
+/* ---------- EMBED FORM LOGIC ---------- */
+const embedForm = document.querySelector('form[action="/embed"]');
+const embedBtn = document.getElementById('embed-btn');
+const embedPwd = document.getElementById('embed-pwd');
+const embedInputs = embedForm.querySelectorAll('input, textarea');
+
+const requirements = {
+    length: /.{8,}/,
+    upper: /[A-Z]/,
+    lower: /[a-z]/,
+    num: /[0-9]/,
+    spec: /[!@#$%^&*(),.?":{}|<>]/
+};
+
+function updatePasswordRequirements() {
+    const val = embedPwd.value;
+    let allValid = true;
+    for (const [key, regex] of Object.entries(requirements)) {
+        const el = document.getElementById(key);
+        const valid = regex.test(val);
+        el.className = valid ? 'valid' : 'invalid';
+        if (!valid) allValid = false;
+    }
+    return allValid;
+}
+
+function checkEmbedForm() {
+    const allFilled = [...embedInputs].every(i =>
+        i.type === "file" ? i.files.length > 0 : i.value.trim() !== ""
+    );
+    const pwdValid = updatePasswordRequirements();
+    embedBtn.disabled = !(allFilled && pwdValid);
+}
+
+embedPwd.addEventListener('input', () => {
+    updatePasswordRequirements();
+    checkEmbedForm();
+});
+
+embedInputs.forEach(input => {
+    if (input !== embedPwd) input.addEventListener('input', checkEmbedForm);
+});
+
+/* ---------- EXTRACT FORM LOGIC ---------- */
+const extractForm = document.querySelector('form[action="/extract"]');
+const extractBtn = document.getElementById('extract-btn');
+const extractInputs = extractForm.querySelectorAll('input');
+
+function checkExtractForm() {
+    const allFilled = [...extractInputs].every(i =>
+        i.type === "file" ? i.files.length > 0 : i.value.trim() !== ""
+    );
+    extractBtn.disabled = !allFilled;
+}
+
+extractInputs.forEach(input => input.addEventListener('input', checkExtractForm));
+
+/* ---------- FILE DROP HANDLERS ---------- */
+document.querySelectorAll('.file-drop').forEach(drop => {
+    const input = document.getElementById(drop.dataset.input);
+    const text = drop.querySelector('.file-text');
+
+    const showError = (msg) => {
+        const defaultText = "DRAG & DROP HERE / CLICK TO SELECT";
+        text.textContent = msg;
+        drop.classList.add('invalid');
+        input.value = "";
+        setTimeout(() => {
+            text.textContent = defaultText;
+            drop.classList.remove('invalid');
+        }, 2500);
+    };
+
+    const handleFile = (file) => {
+        if (file.type !== "image/png") {
+            showError("ONLY PNG FILES ALLOWED!");
+            return false;
+        }
+        text.textContent = file.name.toUpperCase();
+        drop.classList.add('selected');
+        input.dispatchEvent(new Event('input'));
+        return true;
+    };
+
+    drop.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => { if (input.files.length) handleFile(input.files[0]); });
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', e => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            const file = e.dataTransfer.files[0];
+            if (handleFile(file)) input.files = e.dataTransfer.files;
+        }
+    });
+});
+
+/* ---------- LOADING & AJAX ---------- */
+const overlay = document.getElementById('loading-overlay');
+const loaderMsg = document.getElementById('loader-msg');
+const errorContainer = document.getElementById('error-container');
+
+function showLoading(message) {
+    loaderMsg.textContent = message;
+    overlay.style.display = 'flex';
+}
+
+function hideLoading() { overlay.style.display = 'none'; }
+function showUIError(msg) { errorContainer.innerHTML = `<div class="alert">${msg}</div>`; }
+function clearUIError() { errorContainer.innerHTML = ''; }
+
+embedForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearUIError();
+    showLoading("ENCRYPTING & EMBEDDING. PLEASE WAIT ...");
+    const formData = new FormData(this);
+    try {
+        const response = await fetch('/embed', { method: 'POST', body: formData });
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'stego_image.png';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            hideLoading();
+        } else {
+            const errorData = await response.json();
+            hideLoading();
+            showUIError(errorData.error);
+        }
+    } catch (error) {
+        hideLoading();
+        showUIError("CONNECTION ERROR: COULD NOT REACH SERVER.");
+    }
+});
+
+extractForm.addEventListener('submit', () => {
+    clearUIError();
+    showLoading("DECRYPTING & EXTRACTING. PLEASE WAIT ...");
+});
+
+/* ---------- POST-EXTRACTION RESULT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.decryptedText) {
+        const fullText = window.decryptedText;
+        const maxLength = 1000;
+        const shortResultEl = document.getElementById('short-result');
+        const downloadBtn = document.getElementById('download-btn');
+
+        if (fullText.length <= maxLength) {
+            shortResultEl.textContent = fullText;
+        } else {
+            const remaining = fullText.length - maxLength;
+            shortResultEl.textContent = fullText.slice(0, maxLength) + ` ... [${remaining} CHARACTER(S) REMAINING]`;
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([fullText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'secret_message.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+});
+
+window.addEventListener('pageshow', (event) => { if (event.persisted) hideLoading(); });
+
+const canvas = document.getElementById('canvas-bg');
+const ctx = canvas.getContext('2d');
+
+let particles = [];
+const mouse = { x: null, y: null, radius: 250 };
+
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.x;
+    mouse.y = e.y;
+});
+
+function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    particles = [];
+    // Create 80 geometric nodes
+    for (let i = 0; i < 150; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1.5,
+            speedX: (Math.random() - 0.5) * 0.5,
+            speedY: (Math.random() - 0.5) * 0.5
+        });
+    }
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        // Bounce off edges
+        if (p.x > canvas.width || p.x < 0) p.speedX *= -1;
+        if (p.y > canvas.height || p.y < 0) p.speedY *= -1;
+
+        // Draw particle (small squares for tech look)
+        ctx.fillStyle = '#00ff41'; // Your var(--accent)
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+
+        // Interaction Logic
+        let dx = mouse.x - p.x;
+        let dy = mouse.y - p.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < mouse.radius) {
+            ctx.strokeStyle = `rgba(0, 255, 65, ${1 - distance/mouse.radius})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+        }
+    });
+    requestAnimationFrame(animate);
+}
+
+window.addEventListener('resize', init);
+init();
+animate();
+
