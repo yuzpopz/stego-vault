@@ -25,7 +25,7 @@ def embed_msg_logic(img_file, msg, password_str):
     mac = hmac.new(key, header + ciphertext, hashlib.sha256).digest()
 
     img = Image.open(img_file).convert("RGB")
-    arr = np.array(img).astype(np.int16)
+    arr = np.array(img, dtype=np.int16)
     h, w, c = arr.shape
     flat = arr.reshape(-1, 3)
     total_pixels = len(flat)
@@ -36,7 +36,7 @@ def embed_msg_logic(img_file, msg, password_str):
     # Store Header + MAC (64 bytes = 512 bits)
     header_bits = [(b >> i) & 1 for b in (header + mac) for i in range(7, -1, -1)]
     for i, bit in enumerate(header_bits):
-        flat[i][2] = (int(flat[i][2]) & ~1) | bit
+        flat[i][2] = (flat[i][2] & ~1) | bit
 
     # Fisher-Yates Shuffle PRNG
     prng = ChaCha20.new(key=key, nonce=nonce)
