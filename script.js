@@ -67,26 +67,56 @@ function checkExtractForm() {
 
 extractInputs.forEach(input => input.addEventListener('input', checkExtractForm));
 
+const defaultFileText = 'DRAG & DROP HERE / <br class="mobile-only">CLICK TO SELECT';
+
 /* ---------- FILE DROP HANDLERS ---------- */
 document.querySelectorAll('.file-drop').forEach(drop => {
     const input = document.getElementById(drop.dataset.input);
     const text = drop.querySelector('.file-text');
+    const preview = drop.querySelector('.preview-img');
 
     const showError = (msg) => {
-        const defaultText = "DRAG & DROP HERE / CLICK TO SELECT";
         text.textContent = msg;
         drop.classList.add('invalid');
+        drop.classList.remove('selected');
+
+        if(preview) preview.style.display = 'none';
+
         input.value = "";
+        input.dispatchEvent(new Event('input'));
+
         setTimeout(() => {
-            text.textContent = defaultText;
+            text.innerHTML = defaultFileText;
             drop.classList.remove('invalid');
         }, 2500);
     };
 
     const handleFile = (file) => {
-        if (file.type !== "image/png") {
+        if (!file) return false;
+
+        clearPreviousResults();
+
+        const fileName = file.name.toLowerCase();
+        const allowedExtensions = [
+            '.tiff', '.jfif', '.bmp', '.gif', '.png', '.webp', '.jpg',
+            '.jpeg', '.ico', '.xbm', '.dib', '.pjp', '.tif', '.pjpeg', '.avif'
+        ];
+        const isAllowedType = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+        if (input.id === "extract-image" && file.type !== "image/png") {
             showError("ONLY PNG FILES ALLOWED!");
             return false;
+        }
+
+        if (input.id === "embed-image") {
+            if (!file.type.startsWith("image/")) {
+                showError("ONLY IMAGE FILES ALLOWED!");
+                return false;
+            }
+            else if (!isAllowedType) {
+                showError("UNSUPPORTED IMAGE FORMAT!");
+                return false;
+            }
         }
 
         if (input.id === "extract-image") {
@@ -94,14 +124,37 @@ document.querySelectorAll('.file-drop').forEach(drop => {
             localStorage.setItem('stego_filename', nameWithoutExt);
         }
 
-        text.textContent = file.name.toUpperCase();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        text.textContent = "> " + file.name.toUpperCase();
         drop.classList.add('selected');
+
         input.dispatchEvent(new Event('input'));
         return true;
     };
 
     drop.addEventListener('click', () => input.click());
-    input.addEventListener('change', () => { if (input.files.length) handleFile(input.files[0]); });
+    input.addEventListener('change', () => { 
+        if (input.files && input.files.length > 0) {
+            handleFile(input.files[0]); 
+        } else {
+            text.innerHTML = defaultFileText;
+            drop.classList.remove('selected');
+            drop.classList.remove('invalid');
+    
+            if (preview) {
+                preview.src = "";
+                preview.style.display = 'none';
+            }
+            input.value = ""; 
+            input.dispatchEvent(new Event('input')); 
+        }
+    });
     drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
     drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
     drop.addEventListener('drop', e => {
@@ -125,12 +178,19 @@ function showLoading(message) {
 }
 
 function hideLoading() { overlay.style.display = 'none'; }
-function showUIError(msg) { errorContainer.innerHTML = `<div class="alert">${msg}</div>`; }
-function clearUIError() { errorContainer.innerHTML = ''; }
+function showUIError(msg) { errorContainer.innerHTML = `<div class="alert">${msg.toUpperCase()}</div>`; }
+
+function clearPreviousResults() {
+    errorContainer.innerHTML = '';
+    const resultBox = document.querySelector('.result-box');
+    if (resultBox) {
+        resultBox.remove();
+    }
+}
 
 embedForm.addEventListener('submit', async function (e) {
     e.preventDefault();
-    clearUIError();
+    clearPreviousResults();
 
     const fileInput = document.getElementById('embed-image');
     const originalName = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
@@ -162,13 +222,13 @@ embedForm.addEventListener('submit', async function (e) {
 });
 
 /* ---------- UPDATED EXTRACT FORM LOGIC ---------- */
-extractForm.addEventListener('submit', async function(e) {
+extractForm.addEventListener('submit', async function (e) {
     e.preventDefault(); // This stops the browser tab from showing 'loading'
-    clearUIError();
+    clearPreviousResults();
     showLoading("DECRYPTING & EXTRACTING. <br class='mobile-only'>PLEASE WAIT ...");
 
     const formData = new FormData(this);
-    
+
     // Capture filename for the download button later
     const fileInput = document.getElementById('extract-image');
     const originalName = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
@@ -179,7 +239,7 @@ extractForm.addEventListener('submit', async function(e) {
 
         if (response.ok) {
             hideLoading();
-            
+
             let resultBox = document.querySelector('.result-box');
             if (!resultBox) {
                 const section = extractForm.parentElement;
@@ -190,7 +250,7 @@ extractForm.addEventListener('submit', async function(e) {
                 resultBox.className = 'result-box';
                 resultBox.innerHTML = `
                     <label style="color: var(--accent); margin-top: -5px">Result:</label>
-                    <div id="short-result" style="margin-bottom: 12px; word-break: normal;"></div>
+                    <div id="short-result" style="margin-bottom: 12px; overflow-wrap: break-word; word-break: normal;"></div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button id="download-btn" class="download-btn">Download Full Text</button>
                         <button id="copy-btn" class="download-btn" style="margin-left: ${lmargin}">Copy to Clipboard</button>
@@ -235,7 +295,7 @@ extractForm.addEventListener('submit', async function(e) {
                     await navigator.clipboard.writeText(fullText);
                     const originalText = newCopyBtn.textContent;
                     newCopyBtn.textContent = "COPIED!";
-                    
+
                     setTimeout(() => {
                         newCopyBtn.textContent = originalText;
                         newCopyBtn.style.borderColor = "var(--accent)";
