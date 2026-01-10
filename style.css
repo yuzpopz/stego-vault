@@ -135,7 +135,7 @@ input[type="text"] {
 input[type="password"],
 input[type="text"]#embed-pwd,
 input[type="text"]#extract-pwd {
-    padding-right: 70px !important;
+    padding-right: 65px;
 }
 
 @media screen and (max-width: 768px) {
@@ -148,6 +148,12 @@ input[type="text"]#extract-pwd {
 
     input[type="password"]:not([type="text"]) {
         letter-spacing: 3px;
+    }
+
+    input[type="password"],
+    input[type="text"]#embed-pwd,
+    input[type="text"]#extract-pwd {
+        padding-right: 75px;
     }
 }
 
@@ -208,6 +214,7 @@ textarea:focus {
 
     .toggle-btn {
         font-size: 0.9rem;
+        top: 12px;
     }
 }
 
@@ -223,6 +230,7 @@ textarea:focus {
 
     .download-btn {
         width: 100%; /* Stack buttons on very small screens */
+        margin-top: 5px !important;
     }
 }
 
