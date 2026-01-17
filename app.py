@@ -39,7 +39,7 @@ def embed_msg_logic(img_file, msg, password_str):
     header_bits = np.unpackbits(np.frombuffer(payload_header, dtype=np.uint8))
     for i in range(len(header_bits)):
         idx = i * 3 + 2
-        flat[idx] = (flat[idx] & ~1) | header_bits[i]
+        flat[idx] = (flat[idx] & np.uint8(254)) | header_bits[i]
     
     seed = int.from_bytes(key[:4], "little")
     rng = np.random.default_rng(seed)
@@ -53,7 +53,7 @@ def embed_msg_logic(img_file, msg, password_str):
         replace=False
     )
     
-    flat[target_indices] = (flat[target_indices] & ~1) | cipher_bits
+    flat[target_indices] = (flat[target_indices] & np.uint8(254)) | cipher_bits
 
     out_img = Image.fromarray(arr)
     img_io = io.BytesIO()
