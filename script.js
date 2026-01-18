@@ -119,22 +119,33 @@ document.querySelectorAll('.file-drop').forEach(drop => {
             }
         }
 
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const pixelCount = img.width * img.height;
+                const maxPixels = 20000000;
+
+                if (pixelCount > maxPixels && input.id === "embed-image") {
+                    showError("MAX PIXEL COUNT EXCEEDED!");
+                    return;
+                }
+
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                text.textContent = "> " + file.name.toUpperCase();
+                drop.classList.add('selected');
+                input.dispatchEvent(new Event('input'));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
         if (input.id === "extract-image") {
             const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
             localStorage.setItem('stego_filename', nameWithoutExt);
         }
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-
-        text.textContent = "> " + file.name.toUpperCase();
-        drop.classList.add('selected');
-
-        input.dispatchEvent(new Event('input'));
         return true;
     };
 
